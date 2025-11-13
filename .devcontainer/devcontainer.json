@@ -1,7 +1,7 @@
 {
 	"name": "Dreamcast Environment",
 	// Docker image
-	"image": "maishuji/dc-kos-image:14.2.1-dev-02apr25-kp02apr25-gl01mar25",
+	"image": "maishuji/dc-kos-image:15.2.0-10nov25-kp10nov25",
 	"postCreateCommand": "source /opt/toolchains/dc/kos/environ.sh",
 	"customizations": {
 		"vscode": {

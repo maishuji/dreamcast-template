@@ -1,5 +1,5 @@
 # Define the flag to enable/disable the target for CDI image generation
-option(ENABLE_CDI_IMAGE "Enable CDI image generation" OFF)
+option(ENABLE_CDI_IMAGE "Enable CDI image generation" ON)
 
 # ---- CDI Image generation ----
 function(add_generate_cdi_image_for_target target_name)

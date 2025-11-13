@@ -1,5 +1,7 @@
 {
-    
+    "C_Cpp.formatting": "clangFormat",
+    "files.insertFinalNewline": true,
+    "files.trimFinalNewlines": false,
     "terminal.integrated.shellIntegration.enabled": true,
     "terminal.integrated.defaultProfile.osx": "Init dev env",
     "cmake.configureOnOpen": false,
@@ -7,4 +9,5 @@
     "cmake.configureSettings": {
         "toolkitFile": "${workspaceFolder}/.vscode/cmake-kits.json",
     },
+    "cmake.buildDirectory": "${workspaceFolder}/build-vscode",
   }
