@@ -5,17 +5,36 @@ if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
 endif()
 
 set(TARGET_NAME "my_module")
-add_executable(${TARGET_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
+add_executable(${TARGET_NAME} 
+    ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/game_utils.cpp
+)
 set_target_properties(${TARGET_NAME} PROPERTIES
                       CMAKE_CXX_STANDARD 20
                       CXX_EXTENSIONS OFF
-                      CXX_INCLUDE_WHAT_YOU_USE ${IWYU_PATH}
                       )
 
+# Only set IWYU if it's found
+if(IWYU_PATH)
+    set_target_properties(${TARGET_NAME} PROPERTIES
+                          CXX_INCLUDE_WHAT_YOU_USE ${IWYU_PATH}
+                          )
+endif()
+
+target_include_directories(${TARGET_NAME}
+    PUBLIC
+        include   
+)
+
 # GL must be linked after raylib
-if(PLATFORM_DREAMCAST)
+if(DEFINED PLATFORM_DREAMCAST AND PLATFORM_DREAMCAST)
     # ---- Dreamcast specific settings ----
-    target_link_libraries(${TARGET_NAME} PUBLIC dcplib raylib GL)
+    message(STATUS "Building for Dreamcast")
+    target_compile_definitions(${TARGET_NAME}  PRIVATE PLATFORM_DREAMCAST=TRUE)
+    target_link_libraries(${TARGET_NAME} 
+        PUBLIC 
+            dcplib raylib GL
+    )
 else()
     target_link_libraries(${TARGET_NAME} PUBLIC raylib GL)
 endif()

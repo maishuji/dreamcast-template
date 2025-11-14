@@ -31,3 +31,4 @@
 **/*.cdi
 
 build/*
+build-*/
