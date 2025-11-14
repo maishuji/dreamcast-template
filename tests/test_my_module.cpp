@@ -1,13 +1,10 @@
 // Copyright 2025 Quentin Cartier
 
 #include <gtest/gtest.h>
-#include <cmath>
-#include <sstream>
-#include <string>
-#include <ios>
+#include "my_module/game_utils.h"
 
-// Test suite for my_module basic functionality
-class MyModuleTest : public ::testing::Test {
+// Test suite for game utility functions
+class GameUtilsTest : public ::testing::Test {
 protected:
     void SetUp() override {
         // Setup code if needed
@@ -18,74 +15,102 @@ protected:
     }
 };
 
-// Test rotation angle normalization (since the main.cpp has rotation logic)
-TEST_F(MyModuleTest, RotationAngleNormalization) {
-    // Test that rotation angle wraps correctly at 360 degrees
-    float rotationAngle = 350.0f;
-    rotationAngle += 15.0f; // This should result in 365.0f
+// Test rotation angle normalization
+TEST_F(GameUtilsTest, NormalizeAngle) {
+    // Test normal case
+    EXPECT_FLOAT_EQ(GameUtils::normalizeAngle(180.0f), 180.0f);
     
-    // Normalize the angle (similar to the logic in main.cpp)
-    if (rotationAngle >= 360.0f) {
-        rotationAngle -= 360.0f;
-    }
+    // Test wrap around at 360
+    EXPECT_FLOAT_EQ(GameUtils::normalizeAngle(365.0f), 5.0f);
+    EXPECT_FLOAT_EQ(GameUtils::normalizeAngle(720.0f), 0.0f);
     
-    EXPECT_FLOAT_EQ(rotationAngle, 5.0f);
+    // Test negative angles
+    EXPECT_FLOAT_EQ(GameUtils::normalizeAngle(-10.0f), 350.0f);
+    EXPECT_FLOAT_EQ(GameUtils::normalizeAngle(-360.0f), 0.0f);
+    
+    // Test boundary conditions
+    EXPECT_FLOAT_EQ(GameUtils::normalizeAngle(0.0f), 0.0f);
+    EXPECT_FLOAT_EQ(GameUtils::normalizeAngle(359.9f), 359.9f);
 }
 
 // Test rotation angle increment
-TEST_F(MyModuleTest, RotationAngleIncrement) {
-    float rotationAngle = 0.0f;
-    float increment = 1.0f;
+TEST_F(GameUtilsTest, IncrementAngle) {
+    // Test normal increment
+    EXPECT_FLOAT_EQ(GameUtils::incrementAngle(45.0f, 15.0f), 60.0f);
     
-    // Simulate multiple increments
-    for (int i = 0; i < 45; i++) {
-        rotationAngle += increment;
-    }
+    // Test wrap around
+    EXPECT_FLOAT_EQ(GameUtils::incrementAngle(350.0f, 15.0f), 5.0f);
     
-    EXPECT_FLOAT_EQ(rotationAngle, 45.0f);
+    // Test negative increment
+    EXPECT_FLOAT_EQ(GameUtils::incrementAngle(10.0f, -15.0f), 355.0f);
 }
 
-// Test rotation angle boundary conditions
-TEST_F(MyModuleTest, RotationAngleBoundary) {
-    float rotationAngle = 359.9f;
-    rotationAngle += 1.0f;
-    
-    if (rotationAngle >= 360.0f) {
-        rotationAngle -= 360.0f;
-    }
-    
-    EXPECT_LT(rotationAngle, 360.0f);
-    EXPECT_GE(rotationAngle, 0.0f);
+// Test string formatting
+TEST_F(GameUtilsTest, FormatFloatWithPrecision) {
+    EXPECT_EQ(GameUtils::formatFloatWithPrecision(123.456f, 3), "123.456");
+    EXPECT_EQ(GameUtils::formatFloatWithPrecision(123.456f, 1), "123.5");
+    EXPECT_EQ(GameUtils::formatFloatWithPrecision(123.0f, 2), "123.00");
 }
 
-// Test basic mathematical operations that could be used in the game
-TEST_F(MyModuleTest, BasicMathOperations) {
-    // Test basic cube calculations (since the main.cpp draws a cube)
-    float cubeSize = 2.0f;
-    float cubeVolume = cubeSize * cubeSize * cubeSize;
-    
-    EXPECT_FLOAT_EQ(cubeVolume, 8.0f);
+// Test rotation display text
+TEST_F(GameUtilsTest, CreateRotationDisplayText) {
+    std::string result = GameUtils::createRotationDisplayText(45.678f);
+    EXPECT_EQ(result, "Rotation angle: 45.678");
 }
 
-// Test string formatting (similar to the rotation angle text in main.cpp)
-TEST_F(MyModuleTest, StringFormatting) {
-    float testValue = 123.456f;
-    
-    // Convert to string with precision (similar to main.cpp logic)
-    std::ostringstream oss;
-    oss.setf(std::ios::fixed);
-    oss.precision(3);
-    oss << testValue;
-    
-    std::string result = oss.str();
-    EXPECT_EQ(result, "123.456");
+// Test frame time calculation
+TEST_F(GameUtilsTest, CalculateFrameTime) {
+    EXPECT_NEAR(GameUtils::calculateFrameTime(60), 0.01667f, 0.0001f);
+    EXPECT_NEAR(GameUtils::calculateFrameTime(30), 0.03333f, 0.0001f);
+    EXPECT_FLOAT_EQ(GameUtils::calculateFrameTime(0), 0.0f);
+    EXPECT_FLOAT_EQ(GameUtils::calculateFrameTime(-10), 0.0f);
 }
 
-// Test frame rate calculation bounds
-TEST_F(MyModuleTest, FrameRateBounds) {
-    int targetFPS = 60;
-    float frameTime = 1.0f / targetFPS;
+// Test frame rate validation
+TEST_F(GameUtilsTest, IsValidFrameRate) {
+    EXPECT_TRUE(GameUtils::isValidFrameRate(60));
+    EXPECT_TRUE(GameUtils::isValidFrameRate(30));
+    EXPECT_TRUE(GameUtils::isValidFrameRate(120));
+    EXPECT_TRUE(GameUtils::isValidFrameRate(1));
     
-    // Frame time should be approximately 1/60 seconds
-    EXPECT_NEAR(frameTime, 0.01667f, 0.0001f);
+    EXPECT_FALSE(GameUtils::isValidFrameRate(0));
+    EXPECT_FALSE(GameUtils::isValidFrameRate(-10));
+    EXPECT_FALSE(GameUtils::isValidFrameRate(1001));
+}
+
+// Test camera configuration
+TEST_F(GameUtilsTest, CreateDefaultCamera) {
+    auto camera = GameUtils::createDefaultCamera();
+    
+    EXPECT_FLOAT_EQ(camera.posX, 4.0f);
+    EXPECT_FLOAT_EQ(camera.posY, 4.0f);
+    EXPECT_FLOAT_EQ(camera.posZ, 4.0f);
+    EXPECT_FLOAT_EQ(camera.targetX, 0.0f);
+    EXPECT_FLOAT_EQ(camera.targetY, 0.0f);
+    EXPECT_FLOAT_EQ(camera.targetZ, 0.0f);
+    EXPECT_FLOAT_EQ(camera.upX, 0.0f);
+    EXPECT_FLOAT_EQ(camera.upY, 1.0f);
+    EXPECT_FLOAT_EQ(camera.upZ, 0.0f);
+    EXPECT_FLOAT_EQ(camera.fovy, 45.0f);
+}
+
+// Test camera configuration validation
+TEST_F(GameUtilsTest, IsValidCameraConfig) {
+    auto validCamera = GameUtils::createDefaultCamera();
+    EXPECT_TRUE(GameUtils::isValidCameraConfig(validCamera));
+    
+    // Test invalid FOV
+    auto invalidFOV = validCamera;
+    invalidFOV.fovy = 0.0f;
+    EXPECT_FALSE(GameUtils::isValidCameraConfig(invalidFOV));
+    
+    invalidFOV.fovy = 180.0f;
+    EXPECT_FALSE(GameUtils::isValidCameraConfig(invalidFOV));
+    
+    // Test zero up vector
+    auto zeroUp = validCamera;
+    zeroUp.upX = 0.0f;
+    zeroUp.upY = 0.0f;
+    zeroUp.upZ = 0.0f;
+    EXPECT_FALSE(GameUtils::isValidCameraConfig(zeroUp));
 }

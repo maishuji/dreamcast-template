@@ -9,5 +9,5 @@
     "cmake.configureSettings": {
         "toolkitFile": "${workspaceFolder}/.vscode/cmake-kits.json",
     },
-    "cmake.buildDirectory": "${workspaceFolder}/build-vscode",
+    "cmake.buildDirectory": "${workspaceFolder}/build",
   }
