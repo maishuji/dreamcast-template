@@ -2,6 +2,7 @@
 
 #include "my_module/game_utils.h"
 #include <sstream>
+#include <string>
 #include <ios>
 #include <cmath>
 
