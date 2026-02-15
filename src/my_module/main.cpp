@@ -24,6 +24,16 @@ KOS_INIT_FLAGS(INIT_DEFAULT);
 #endif
 
 int main(int argc, char **argv) {
+
+    // Check if we are running on Dreamcast and in debug mode
+#if defined(PLATFORM_DREAMCAST) && defined(DEBUG)
+    dbglog(DBG_ERROR, "Running on Dreamcast in debug mode.\n");
+    gdb_init();
+    dbglog(DBG_ERROR, "GDB initialized.\n");
+    // You can manually set breakpoints in the code with gdb_breakpoint() function,
+    // or use gdb commands to set breakpoints.
+#endif
+
     InitWindow(640, 480, "Block stacking puzzle game in KOS!");
     Camera camera = {0};
     camera.position = (Vector3){4.0f, 4.0f, 4.0f};  // Camera position

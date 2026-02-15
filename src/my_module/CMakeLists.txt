@@ -26,6 +26,31 @@ target_include_directories(${TARGET_NAME}
         include   
 )
 
+# Add DEBUG flag for debug builds
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    target_compile_definitions(${TARGET_NAME} PRIVATE DEBUG=1)
+    message(STATUS "DEBUG flag enabled for Debug build")
+endif()
+
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    target_compile_options(${TARGET_NAME} PRIVATE -flto)
+    target_link_options(${TARGET_NAME} PRIVATE -flto -fuse-linker-plugin)
+    message(STATUS "LTO enabled for Release build")
+else()
+    # Enable LTO for Debug too, but with debug-friendly settings
+    target_compile_options(${TARGET_NAME} PRIVATE 
+        -flto 
+        -fno-lto-odr-type-merging  # Better debug info
+        -g3                         # Maximum debug info
+    )
+    target_link_options(${TARGET_NAME} PRIVATE 
+        -flto 
+        -fuse-linker-plugin
+        -g3
+    )
+    message(STATUS "LTO enabled for Debug build (with debug optimizations)")
+endif()
+
 # GL must be linked after raylib
 if(DEFINED PLATFORM_DREAMCAST AND PLATFORM_DREAMCAST)
     # ---- Dreamcast specific settings ----
@@ -38,7 +63,6 @@ if(DEFINED PLATFORM_DREAMCAST AND PLATFORM_DREAMCAST)
 else()
     target_link_libraries(${TARGET_NAME} PUBLIC raylib GL)
 endif()
-message(STATUS "******Dreamcast ? : ${PLATFORM_DREAMCAST}")
 
 if (PLATFORM_DREAMCAST)
     # ---- ROMDISK generation ----
