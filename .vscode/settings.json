@@ -9,5 +9,6 @@
     "cmake.configureSettings": {
         "toolkitFile": "${workspaceFolder}/.vscode/cmake-kits.json",
     },
+    "cmake.generator": "Unix Makefiles",
     "cmake.buildDirectory": "${workspaceFolder}/build",
   }
