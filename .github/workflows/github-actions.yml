@@ -1,6 +1,6 @@
 name: GitHub Action
 run-name: ${{ github.actor }} is building the repository 🚀
-on: [push]
+on: [push, pull_request]
 jobs:
   Explore-GitHub-Actions:
     runs-on: ubuntu-latest
@@ -15,9 +15,7 @@ jobs:
       - run:  |
           echo " 🫣 Building..."
           source /opt/toolchains/dc/kos/environ.sh
-          mkdir build
-          cd build
-          cmake .. -DCMAKE_TOOLCHAIN_FILE=../toolchains/dreamcast.cmake
-          make
+          cmake -S . -B build-dreamcast -G "Unix Makefiles" -DCMAKE_TOOLCHAIN_FILE=toolchains/dreamcast.cmake
+          cmake --build build-dreamcast --verbose
           echo " 👏 Build completed"
         shell: bash
