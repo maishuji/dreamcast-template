@@ -32,3 +32,5 @@
 
 build/*
 build-*/
+
+.private/

@@ -11,7 +11,6 @@ add_executable(my_module_tests
 target_link_libraries(my_module_tests
     PRIVATE
         gtest
-        gtest_main
 )
 
 # Include directories (none needed for basic tests)

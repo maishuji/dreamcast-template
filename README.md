@@ -5,6 +5,7 @@ This repository provides a template for developing Dreamcast homebrew applicatio
 ## Features
 
 - **Pre-configured Toolchain**: Uses a CMake-based build system with a Dreamcast-specific toolchain.
+- **Dual-Target Workflow**: Supports Linux host builds for local iteration and Dreamcast builds for packaging and hardware testing.
 - **Devcontainer Support**: Includes a development container configuration for a consistent development environment.
 - **GitHub Actions Integration**: Automates builds using a pre-configured GitHub Actions workflow.
 - **Example Code**: A simple 3D cube rendering example using `raylib` and KOS.
@@ -19,6 +20,7 @@ Before using this template, if you are not planning to use the configured devcon
 - Different tools for building and testing:
   - `mkdcdisc` (for creating CDI images from elf file).
 - CMake (minimum version 3.11.0).
+- A C++20 compiler and `raylib` development libraries for Linux host builds.
 
 Else, you can use the provided devcontainer configuration to set up a consistent development environment.
 - Visual Studio Code (with the Dev Containers extension).
@@ -65,6 +67,60 @@ source /opt/toolchains/dc/kos/environ.sh
 
 ### 3. Build the Project
 
+Use separate build directories for Linux host and Dreamcast targets.
+
+#### Linux host build
+
+Use the host path for local iteration and unit tests.
+
+```bash
+make host-configure
+make host-build
+make host-test
+```
+
+Equivalent raw CMake commands:
+
+```bash
+cmake -S . -B build-host -G Ninja
+cmake --build build-host --target my_module
+ctest --test-dir build-host --output-on-failure
+```
+
+#### Dreamcast build
+
+Source the KOS environment first, then configure the Dreamcast target with `Unix Makefiles`.
+
+```bash
+source /opt/toolchains/dc/kos/environ.sh
+make dreamcast-configure
+make dreamcast-build
+```
+
+Equivalent raw CMake commands:
+
+```bash
+source /opt/toolchains/dc/kos/environ.sh
+cmake -S . -B build-dreamcast -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=toolchains/dreamcast.cmake
+cmake --build build-dreamcast --verbose
+```
+
+Do not use the Ninja generator for Dreamcast builds. This template treats `Unix Makefiles` as the supported Dreamcast path because Ninja is a known problematic configuration there.
+
+#### Run on hardware
+
+After a Dreamcast build completes, you can send the ELF over the network:
+
+```bash
+make run-dc DC_BUILD_DIR=build-dreamcast DC_IP=192.168.0.84
+```
+
+For the GDB-enabled path:
+
+```bash
+make run-dc-gdb DC_BUILD_DIR=build-dreamcast DC_IP=192.168.0.84
+```
+
 ## Project Structure
 
 ```plaintext
@@ -72,7 +128,8 @@ dc-template/
 ├── .devcontainer/         # Devcontainer configuration
 ├── .github/workflows/     # GitHub Actions workflow
 ├── .vscode/               # VS Code settings and CMake kits
-├── build/                 # Build output directory (ignored by Git)
+├── build-host/            # Recommended Linux host build directory (generated)
+├── build-dreamcast/       # Recommended Dreamcast build directory (generated)
 ├── cmake/                 # CMake modules
 ├── src/                   # Source code
 │   └── my_module/         # Example module
@@ -96,8 +153,9 @@ The included example (`src/my_module/main.cpp`) demonstrates:
 This template includes a GitHub Actions workflow (.github/workflows/github-actions.yml) to automate builds. The workflow:
 
     1. Runs in a containerized Dreamcast development environment.
-    2. Builds the project using the provided toolchain.
-    3. Outputs the build artifacts.
+    2. Builds the Dreamcast target using the provided toolchain and the `Unix Makefiles` generator.
+    3. Runs on both pushes and pull requests.
+    4. Outputs the build artifacts.
 
 ## License
 This template is licensed under the [MIT License](https://opensource.org/licenses/MIT).

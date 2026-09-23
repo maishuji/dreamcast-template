@@ -37,18 +37,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Release")
     target_link_options(${TARGET_NAME} PRIVATE -flto -fuse-linker-plugin)
     message(STATUS "LTO enabled for Release build")
 else()
-    # Enable LTO for Debug too, but with debug-friendly settings
-    target_compile_options(${TARGET_NAME} PRIVATE 
-        -flto 
-        -fno-lto-odr-type-merging  # Better debug info
-        -g3                         # Maximum debug info
-    )
-    target_link_options(${TARGET_NAME} PRIVATE 
-        -flto 
-        -fuse-linker-plugin
-        -g3
-    )
-    message(STATUS "LTO enabled for Debug build (with debug optimizations)")
+    message(STATUS "LTO disabled for non-Release builds")
 endif()
 
 # GL must be linked after raylib
