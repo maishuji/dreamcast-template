@@ -10,6 +10,7 @@ This repository provides a template for developing Dreamcast homebrew applicatio
 - **GitHub Actions Integration**: Automates builds using a pre-configured GitHub Actions workflow.
 - **Example Code**: A simple 3D cube rendering example using `raylib` and KOS.
 - **ROMDISK and CDI Generation**: Automatically generates ROMDISK and CDI images for Dreamcast testing.
+- **Flycast Workflow**: Builds the CDI in the KOS container, launches Flycast on the host, and retains emulator/guest serial logs.
 - **No In-Source Builds**: Enforces clean build practices.
 
 ## Prerequisites
@@ -106,6 +107,18 @@ cmake --build build-dreamcast --verbose
 ```
 
 Do not use the Ninja generator for Dreamcast builds. This template treats `Unix Makefiles` as the supported Dreamcast path because Ninja is a known problematic configuration there.
+
+#### Run in Flycast with logging
+
+From a host terminal at the repository root (with Docker and a graphical session), build with the configured KOS image and launch Flycast on the host:
+
+```bash
+make flycast
+```
+
+The target runs the KOS build in a temporary container, then launches the native `flycast` binary or installed `org.flycast.Flycast` Flatpak on the host. It retains combined output in `.artifacts/flycast/`. Flycast boot messages do not prove that guest KOS logs were captured.
+
+If you are already working inside the Dev Container, use `make dreamcast-configure` and `make dreamcast-cdi` there, then run `make flycast-logs` from a host terminal opened at the same shared workspace. See the [Flycast logging guide](docs/flycast.md) for details and limitations. Running on real hardware uses the separate `run-dc` target below.
 
 #### Run on hardware
 
