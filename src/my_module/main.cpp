@@ -23,6 +23,17 @@
 KOS_INIT_FLAGS(INIT_DEFAULT);
 #endif
 
+static void log_milestone(const char *message) {
+#if defined(PLATFORM_DREAMCAST)
+    // Keep the active KOS dbgio device (e.g. dcload or Flycast serial).
+    dbglog(DBG_NOTICE, "dreamcast-template: %s\n", message);
+    dbgio_flush();
+#else
+    std::fprintf(stderr, "dreamcast-template: %s\n", message);
+    std::fflush(stderr);
+#endif
+}
+
 int main(int argc, char **argv) {
 
     // Check if we are running on Dreamcast and in debug mode
@@ -34,7 +45,9 @@ int main(int argc, char **argv) {
     // or use gdb commands to set breakpoints.
 #endif
 
+    log_milestone("booted");
     InitWindow(640, 480, "Block stacking puzzle game in KOS!");
+    log_milestone("renderer-ready");
     Camera camera = {0};
     camera.position = (Vector3){4.0f, 4.0f, 4.0f};  // Camera position
     camera.target = (Vector3){0.0f, 0.0f, 0.0f};    // Look-at point
@@ -46,6 +59,7 @@ int main(int argc, char **argv) {
     SetTargetFPS(60);
     auto go_on = true;
 
+    log_milestone("frame-loop-started");
     while (go_on && !WindowShouldClose()) {
         rotationAngle = GameUtils::incrementAngle(rotationAngle, 1.0f);
 
@@ -80,5 +94,6 @@ int main(int argc, char **argv) {
     }
 
     CloseWindow();  // Clean up window resources
+    log_milestone("normal-shutdown");
     return 0;
 }

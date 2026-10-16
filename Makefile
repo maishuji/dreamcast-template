@@ -3,8 +3,12 @@ HOST_CMAKE_GENERATOR ?= Ninja
 DC_IP ?= 192.168.0.84 # Please set the IP address of your dreamcast here ( or through env var DC_IP )
 DC_BUILD_DIR ?= build-dreamcast
 DC_CMAKE_GENERATOR ?= Unix Makefiles
+DC_TARGET ?= my_module
+DC_CDI ?= out/$(DC_TARGET).cdi
+CONTAINER_RUNTIME ?= docker
+KOS_IMAGE ?= maishuji/dc-kos-image:15.2.1-dev-08feb26-gdb-kp08feb26
 
-.PHONY: all host-configure host-build host-test dreamcast-configure dreamcast-build run-dc run-dc-gdb lint clean build-cmake-verbose
+.PHONY: all host-configure host-build host-test dreamcast-configure dreamcast-build dreamcast-cdi flycast flycast-logs test-flycast-launcher test-build-flycast run-dc run-dc-gdb lint clean build-cmake-verbose
 
 host-configure:
 	cmake -S . -B $(HOST_BUILD_DIR) -G "$(HOST_CMAKE_GENERATOR)"
@@ -20,6 +24,23 @@ dreamcast-configure:
 
 dreamcast-build:
 	cmake --build $(DC_BUILD_DIR) --verbose
+
+# CDI generation is part of the Dreamcast CMake build (ENABLE_CDI_IMAGE=ON).
+dreamcast-cdi: dreamcast-build
+
+# Build with the KOS image and launch Flycast on the host.
+flycast:
+	CONTAINER_RUNTIME="$(CONTAINER_RUNTIME)" KOS_IMAGE="$(KOS_IMAGE)" DC_BUILD_DIR="$(DC_BUILD_DIR)" DC_CDI="$(DC_CDI)" FLYCAST_BIN="$(FLYCAST_BIN)" FLYCAST_LOG_DIR="$(FLYCAST_LOG_DIR)" FLYCAST_REQUIRED_MARKER="$(FLYCAST_REQUIRED_MARKER)" bash tools/build-flycast.sh
+
+# Launch an already-built CDI on the host and retain its logs.
+flycast-logs:
+	DC_CDI="$(DC_CDI)" bash tools/run-flycast.sh
+
+test-flycast-launcher:
+	bash tests/test_flycast_launcher.sh
+
+test-build-flycast:
+	bash tests/test_build_flycast.sh
 
 # This target is for running the program on dreamcast, given that you are using BBA or a LAN adapter
 run-dc:
