@@ -35,3 +35,4 @@ build-*/
 
 .private/
 .artifacts/
+.agents/
