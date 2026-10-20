@@ -11,7 +11,7 @@ cdi_dir=$(dirname "$cdi")
 
 if [[ -n "${FLYCAST_BIN:-}" ]]; then
     if ! command -v "$FLYCAST_BIN" >/dev/null 2>&1; then
-        echo "Flycast executable not found: $FLYCAST_BIN" >&2
+        printf 'Flycast executable not found: %s\nSet FLYCAST_BIN to an installed executable, or omit it to use Flycast on PATH or the Flatpak. See docs/flycast.md.\n' "$FLYCAST_BIN" >&2
         exit 2
     fi
     launcher=("$FLYCAST_BIN")
@@ -21,7 +21,11 @@ elif command -v flatpak >/dev/null 2>&1 && flatpak info org.flycast.Flycast >/de
     # Grant only the CDI's directory; the Flatpak needs access to the image.
     launcher=(flatpak run "--filesystem=$cdi_dir:ro" org.flycast.Flycast)
 else
-    echo "Flycast not found: install the native binary or org.flycast.Flycast Flatpak, or set FLYCAST_BIN" >&2
+    printf '%s\n' \
+        'No usable Flycast found on the host (native flycast on PATH or org.flycast.Flycast Flatpak).' \
+        'Install Flatpak and configure Flathub, then run: flatpak install flathub org.flycast.Flycast' \
+        'Or install native Flycast on PATH, or set FLYCAST_BIN=/absolute/path/to/flycast.' \
+        'See docs/flycast.md#install-flycast-on-the-host for setup and troubleshooting.' >&2
     exit 2
 fi
 

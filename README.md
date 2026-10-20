@@ -110,7 +110,7 @@ Do not use the Ninja generator for Dreamcast builds. This template treats `Unix 
 
 #### Run in Flycast with logging
 
-From a host terminal at the repository root (with Docker and a graphical session), build with the configured KOS image and launch Flycast on the host:
+From a host terminal at the repository root (with Docker, a graphical session, and Flycast installed on the host), build with the configured KOS image and launch Flycast on the host. If Flycast is missing, follow the [host installation steps](docs/flycast.md#install-flycast-on-the-host) first:
 
 ```bash
 make flycast
