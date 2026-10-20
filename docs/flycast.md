@@ -1,5 +1,28 @@
 # Run Flycast and inspect serial logs
 
+## Install Flycast on the host
+
+You need a graphical session and either a native `flycast` executable on your host `PATH` or the `org.flycast.Flycast` Flatpak. Install it on the **host**, not inside the KOS Dev Container.
+
+For Flatpak, first [install Flatpak and configure Flathub for your distribution](https://flatpak.org/setup/) if you have not already done so. Then install and check the Flycast app:
+
+```sh
+flatpak install flathub org.flycast.Flycast
+flatpak info org.flycast.Flycast
+```
+
+If `flatpak install` says `flathub` is not configured, complete the linked Flathub setup before retrying. If `flatpak info` fails, check its error: the app may be missing or the Flatpak installation may need attention. The launcher will use this app automatically when it cannot find a native `flycast` on `PATH`.
+
+Alternatively, [install a native Flycast release](https://github.com/flyinghead/flycast/releases) for your host and ensure `flycast` is on `PATH`. If its executable is elsewhere, provide the executable path (not a directory):
+
+```sh
+make flycast FLYCAST_BIN=/absolute/path/to/flycast
+# Or, to launch a CDI built earlier:
+make flycast-logs FLYCAST_BIN=/absolute/path/to/flycast
+```
+
+Both Make targets report a missing emulator before trying to launch it; `make flycast` checks before starting its container build. Neither target installs Flycast for you.
+
 ## One-command host workflow
 
 From a host terminal at the repository root, run:
@@ -10,7 +33,7 @@ make flycast
 
 This runs the configured KOS toolchain image in a disposable Docker container, builds the CDI in the shared workspace, then launches Flycast on the host. The image defaults to the same tag as `.devcontainer/devcontainer.json`; override it with `KOS_IMAGE=...` only when intentionally using another compatible toolchain image. Docker must be installed and usable by your host user. The host also needs a graphical session and either a native `flycast` executable or the `org.flycast.Flycast` Flatpak. For a Flatpak, the launcher grants read-only access to the CDI directory for this run.
 
-The container uses the host UID/GID and mounts the repository at `/workspace`, so build outputs are written back to the checkout without root-owned files. It sources KOS's environment setup, configures the Dreamcast build, and creates `out/my_module.cdi`. After the container exits successfully, the host verifies that the selected CDI exists and is non-empty before starting Flycast. If the build fails, Flycast is not launched. The host log stays in `.artifacts/flycast/`.
+The container uses the host UID/GID and mounts the repository at `/workspace`, so build outputs are written back to the checkout without root-owned files. It sources KOS's environment setup, configures the Dreamcast build in `build-flycast`, and creates `out/my_module.cdi`. This build directory is separate from the Dev Container's default `build-dreamcast`: CMake caches absolute paths, which differ between environments. Override the host workflow's directory with `make flycast FLYCAST_BUILD_DIR=build-flycast-custom`; do not share that directory with a build configured at another workspace path. Direct invocation of `tools/build-flycast.sh` accepts `DC_BUILD_DIR` and also defaults to `build-flycast`. After the container exits successfully, the host verifies that the selected CDI exists and is non-empty before starting Flycast. If the build fails, Flycast is not launched. The host log stays in `.artifacts/flycast/`.
 
 `make flycast` is deliberately host-only: it refuses to run inside a Dev Container because that container normally has neither the host's desktop session nor access to its Flycast installation. From inside the Dev Container, use two terminals:
 
@@ -22,6 +45,8 @@ make dreamcast-cdi
 # Host terminal, at the same locally shared workspace
 make flycast-logs
 ```
+
+`make dreamcast-cdi` reconfigures the selected build directory with `ENABLE_CDI_IMAGE=ON` and explicitly builds `my_module_cdi` (or `DC_TARGET` followed by `_cdi`), so a previously disabled CDI setting cannot silently leave an old image in place. Configure the Dreamcast toolchain first as shown above; this target preserves that cache's toolchain and build type.
 
 This two-terminal path depends on the CDI being visible at the same workspace path on the host. Remote or volume-backed Dev Containers may not share files with the host; for those setups, copy the CDI to a host-accessible directory and pass its path using `DC_CDI=/path/to/game.cdi` to `make flycast-logs`.
 

@@ -24,17 +24,22 @@ fi
 
 if [[ -n "${FLYCAST_BIN:-}" ]]; then
     if ! command -v "$FLYCAST_BIN" >/dev/null 2>&1; then
-        printf 'Flycast executable not found: %s\n' "$FLYCAST_BIN" >&2
+        printf 'Flycast executable not found: %s\nSet FLYCAST_BIN to an installed executable, or omit it to use Flycast on PATH or the Flatpak. See docs/flycast.md.\n' "$FLYCAST_BIN" >&2
         exit 2
     fi
 elif ! command -v flycast >/dev/null 2>&1 &&
      { ! command -v flatpak >/dev/null 2>&1 || ! flatpak info org.flycast.Flycast >/dev/null 2>&1; }; then
-    printf 'Flycast not found: install the native binary or org.flycast.Flycast Flatpak, or set FLYCAST_BIN.\n' >&2
+    printf '%s\n' \
+        'No usable Flycast found on the host (native flycast on PATH or org.flycast.Flycast Flatpak).' \
+        'Install Flatpak and configure Flathub, then run: flatpak install flathub org.flycast.Flycast' \
+        'Or install native Flycast on PATH, or set FLYCAST_BIN=/absolute/path/to/flycast.' \
+        'See docs/flycast.md#install-flycast-on-the-host for setup and troubleshooting.' >&2
     exit 2
 fi
 
 image=${KOS_IMAGE:-maishuji/dc-kos-image:15.2.1-dev-08feb26-gdb-kp08feb26}
-build_dir=${DC_BUILD_DIR:-build-dreamcast}
+# CMake caches absolute paths; do not reuse the Dev Container build tree.
+build_dir=${DC_BUILD_DIR:-build-flycast}
 uid=$(id -u)
 gid=$(id -g)
 printf 'Building the CDI in %s as host uid:gid %s:%s...\n' "$image" "$uid" "$gid" >&2

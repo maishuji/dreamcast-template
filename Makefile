@@ -2,6 +2,7 @@ HOST_BUILD_DIR ?= build-host
 HOST_CMAKE_GENERATOR ?= Ninja
 DC_IP ?= 192.168.0.84 # Please set the IP address of your dreamcast here ( or through env var DC_IP )
 DC_BUILD_DIR ?= build-dreamcast
+FLYCAST_BUILD_DIR ?= build-flycast
 DC_CMAKE_GENERATOR ?= Unix Makefiles
 DC_TARGET ?= my_module
 DC_CDI ?= out/$(DC_TARGET).cdi
@@ -25,16 +26,18 @@ dreamcast-configure:
 dreamcast-build:
 	cmake --build $(DC_BUILD_DIR) --verbose
 
-# CDI generation is part of the Dreamcast CMake build (ENABLE_CDI_IMAGE=ON).
-dreamcast-cdi: dreamcast-build
+# Re-enable CDI generation even when an existing cache has it disabled.
+dreamcast-cdi:
+	cmake -S . -B "$(DC_BUILD_DIR)" -DENABLE_CDI_IMAGE=ON
+	cmake --build "$(DC_BUILD_DIR)" --target $(DC_TARGET)_cdi --verbose
 
 # Build with the KOS image and launch Flycast on the host.
 flycast:
-	CONTAINER_RUNTIME="$(CONTAINER_RUNTIME)" KOS_IMAGE="$(KOS_IMAGE)" DC_BUILD_DIR="$(DC_BUILD_DIR)" DC_CDI="$(DC_CDI)" FLYCAST_BIN="$(FLYCAST_BIN)" FLYCAST_LOG_DIR="$(FLYCAST_LOG_DIR)" FLYCAST_REQUIRED_MARKER="$(FLYCAST_REQUIRED_MARKER)" bash tools/build-flycast.sh
+	CONTAINER_RUNTIME="$(CONTAINER_RUNTIME)" KOS_IMAGE="$(KOS_IMAGE)" DC_BUILD_DIR="$(FLYCAST_BUILD_DIR)" DC_CDI="$(DC_CDI)" FLYCAST_BIN="$(FLYCAST_BIN)" FLYCAST_LOG_DIR="$(FLYCAST_LOG_DIR)" FLYCAST_REQUIRED_MARKER="$(FLYCAST_REQUIRED_MARKER)" bash tools/build-flycast.sh
 
 # Launch an already-built CDI on the host and retain its logs.
 flycast-logs:
-	DC_CDI="$(DC_CDI)" bash tools/run-flycast.sh
+	DC_CDI="$(DC_CDI)" FLYCAST_BIN="$(FLYCAST_BIN)" FLYCAST_LOG_DIR="$(FLYCAST_LOG_DIR)" FLYCAST_REQUIRED_MARKER="$(FLYCAST_REQUIRED_MARKER)" bash tools/run-flycast.sh
 
 test-flycast-launcher:
 	bash tests/test_flycast_launcher.sh
