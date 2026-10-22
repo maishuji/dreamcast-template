@@ -53,7 +53,7 @@ printf 'Building the CDI in %s as host uid:gid %s:%s...\n' "$image" "$uid" "$gid
     "$image" \
     bash -lc 'source /opt/toolchains/dc/kos/environ.sh && make dreamcast-configure && make dreamcast-cdi'
 
-cdi=${DC_CDI:-out/my_module.cdi}
+cdi=${DC_CDI:-$build_dir/src/my_module/my_module.cdi}
 if [[ "$cdi" != /* ]]; then
     cdi="$repo_root/$cdi"
 fi

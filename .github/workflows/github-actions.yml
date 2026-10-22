@@ -2,6 +2,12 @@ name: GitHub Action
 run-name: ${{ github.actor }} is building the repository 🚀
 on: [push, pull_request]
 jobs:
+  Flycast-Script-Tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test Flycast build and launcher scripts without Docker or Flycast
+        run: make test-flycast-launcher test-build-flycast
   Explore-GitHub-Actions:
     runs-on: ubuntu-latest
     container: 
