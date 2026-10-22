@@ -7,7 +7,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Test Flycast build and launcher scripts without Docker or Flycast
-        run: make test-flycast-launcher test-build-flycast
+        run: make test-flycast-launcher test-build-flycast test-in-container
   Explore-GitHub-Actions:
     runs-on: ubuntu-latest
     container: 

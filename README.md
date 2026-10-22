@@ -1,78 +1,90 @@
 # Dreamcast KOS Project Template
 
-This repository provides a template for developing Dreamcast homebrew applications using the KallistiOS (KOS) framework. It includes a pre-configured development environment, build system, and example code to help you get started quickly.
-
-## Features
-
-- **Pre-configured Toolchain**: Uses a CMake-based build system with a Dreamcast-specific toolchain.
-- **Dual-Target Workflow**: Supports Linux host builds for local iteration and Dreamcast builds for packaging and hardware testing.
-- **Devcontainer Support**: Includes a development container configuration for a consistent development environment.
-- **GitHub Actions Integration**: Automates builds using a pre-configured GitHub Actions workflow.
-- **Example Code**: A simple 3D cube rendering example using `raylib` and KOS.
-- **ROMDISK and CDI Generation**: Automatically generates ROMDISK and CDI images for Dreamcast testing.
-- **Flycast Workflow**: Builds the CDI in the KOS container, launches Flycast on the host, and retains emulator/guest serial logs.
-- **No In-Source Builds**: Enforces clean build practices.
-
-## Prerequisites
-
-Before using this template, if you are not planning to use the configured devcontainer, ensure you have the following installed:
-
-- [KallistiOS (KOS)](https://github.com/KallistiOS/KallistiOS) installed and configured.
-- Different tools for building and testing:
-  - `mkdcdisc` (for creating CDI images from elf file).
-- CMake (minimum version 3.11.0).
-- A C++20 compiler and `raylib` development libraries for Linux host builds.
-
-Else, you can use the provided devcontainer configuration to set up a consistent development environment.
-- Visual Studio Code (with the Dev Containers extension).
-- Docker (for the development container).
+A starter project for Sega Dreamcast homebrew using KallistiOS (KOS), CMake, and raylib. Build for Dreamcast from the host with the included KOS container workflow, use the Dev Container, or configure a native toolchain yourself.
 
 ## Getting Started
 
-### 1. Clone the Repository
+### 1. Get the template
+
+Clone this repository or create your own copy using your preferred GitHub workflow:
 
 ```bash
-git clone https://github.com/your-username/dreamcast-template.git
+git clone https://github.com/maishuji/dreamcast-template.git
 cd dreamcast-template
 ```
 
-### 2. Configure the Development Environment
+### 2. Build for Dreamcast from the host
 
-#### Option 1: Using Devcontainer (Recommended)
-    1. Open the project in Visual Studio Code.
-    2. Install the Dev Containers extension.
-    3. Reopen the project in the container when prompted.
-#### Option 2: Manual Setup
+Install Docker (or a compatible container runtime) and make sure your user can run it. From the repository root, run:
 
-If you prefer not to use the devcontainer, ensure the following tools and dependencies are installed and configured on your system:
-
-1. **KallistiOS (KOS)**  
-   - Install and configure [KallistiOS (KOS)](https://github.com/KallistiOS/KallistiOS), the Dreamcast homebrew development framewor;, along with the toolchain.
-
-2. **Kos-Ports**  
-   - Install and configure [Kos-Ports](https://github.com/KallistiOS/kos-ports), a collection of libraries and tools for KOS development.
-
-3. **CMake**  
-   - Install [CMake](https://cmake.org/) (minimum version 3.11.0) for managing the build process.
-
-4. **Mkdcdisc**
-    - Install [mkdcdisc](https://gitlab.com/simulant/mkdcdisc.git), a tool for creating CDI images from ELF files. This tool is typically included with the KallistiOS installation.
-5. **Other tools**
-    - You may refer to this [Dockerfile](https://github.com/maishuji/dreamcast-kos-docker/blob/main/kos-ready/Dockerfile) for other tools provided in the devcontainer.
-        - Ensure the `MKDCDISC` tool is available in your system.
-
-6. **Source the KOS environment setup script**:
 ```bash
-source /opt/toolchains/dc/kos/environ.sh
+make in-container TARGET=dreamcast-build
 ```
 
-### 3. Build the Project
+The command runs the KOS build in a temporary container; you do not need to open a Dev Container or install the KOS toolchain on the host. On first use, the container runtime downloads the configured KOS image. The default build outputs are:
 
-Use separate build directories for Linux host and Dreamcast targets.
+- ELF: `build-container/src/my_module/my_module.elf`
+- CDI: `build-container/src/my_module/my_module.cdi`
+- A published copy of the CDI: `out/my_module.cdi`
 
-#### Linux host build
+See the [host-side container build guide](docs/container-build.md) for prerequisites, output paths, overrides, and troubleshooting. To run the CDI in Flycast, see [Run in Flycast](docs/flycast.md).
 
-Use the host path for local iteration and unit tests.
+## Overview
+
+This repository includes:
+
+- CMake workflows for Linux host builds and Dreamcast cross-builds.
+- A pinned KOS Dev Container and GitHub Actions build.
+- A sample raylib application with controller input and a rotating 3D cube.
+- ROMDISK and CDI generation.
+- Optional Flycast launch and guest serial-log capture.
+- Out-of-source build directories for host and Dreamcast targets.
+
+The Dreamcast example and hardware paths are separate from the Linux host build and tests. A successful build or emulator run is not proof of real Dreamcast hardware behavior.
+
+### Further reading
+
+- [KallistiOS documentation](https://www.kallistios.org/) and the [KOS ports repository](https://github.com/KallistiOS/kos-ports)
+- [Dreamcast Development Wiki](https://www.dreamcast.wiki/)
+- [raylib documentation](https://www.raylib.com/)
+- [CMake documentation](https://cmake.org/documentation/)
+- [GitHub Actions documentation](https://docs.github.com/en/actions)
+
+### Project structure
+
+```text
+dreamcast-template/
+├── .devcontainer/        # Dev Container configuration
+├── .github/workflows/    # CI build and script tests
+├── .vscode/              # Editor and CMake settings
+├── cmake/                # CDI generation and CMake helpers
+├── docs/                 # Build, Flycast, and network guides
+├── src/my_module/        # Example application and ROMDISK assets
+├── tests/                # C++ and shell tests
+├── tools/                # Host-side container and Flycast scripts
+├── toolchains/           # Dreamcast toolchain configuration
+├── out/                  # Published CDI images
+├── CMakeLists.txt
+├── Makefile
+└── README.md
+```
+
+Build directories such as `build-host/`, `build-dreamcast/`, `build-container/`, and `build-flycast/` are generated locally and ignored by Git.
+
+## Installation
+
+Choose the environment that matches the task:
+
+- **Dreamcast build from the host:** Docker or a compatible runtime that accepts the Docker CLI options used by the dispatcher. The KOS image supplies KOS, the cross-compiler, CMake, and `mkdcdisc`; no local KOS installation is needed. The image is pulled automatically when absent. See [Build Dreamcast targets from the host](docs/container-build.md).
+- **Dev Container:** Visual Studio Code, the Dev Containers extension, and Docker. Open the repository and select **Reopen in Container**.
+- **Manual Dreamcast toolchain:** install and configure KOS, the required kos-ports libraries, CMake, the Dreamcast cross-compiler, and `mkdcdisc`; source the KOS environment before configuring. See the [KallistiOS documentation](https://github.com/KallistiOS/KallistiOS) and the [KOS ports repository](https://github.com/KallistiOS/kos-ports).
+- **Native Linux host build and tests:** CMake 3.11 or newer, a C++20 compiler, and Linux raylib development libraries. The host CMake configuration fetches GoogleTest v1.14.0 with CMake `FetchContent`, so a first-time configure needs access to its Git repository unless the dependency is already cached.
+
+## Usage
+
+### Linux host build and tests
+
+Use this path for local iteration and unit tests; it does not build a Dreamcast binary:
 
 ```bash
 make host-configure
@@ -80,7 +92,7 @@ make host-build
 make host-test
 ```
 
-Equivalent raw CMake commands:
+Equivalent CMake commands:
 
 ```bash
 cmake -S . -B build-host -G Ninja
@@ -88,99 +100,70 @@ cmake --build build-host --target my_module
 ctest --test-dir build-host --output-on-failure
 ```
 
-#### Dreamcast build
+### Dreamcast build
 
-Source the KOS environment first, then configure the Dreamcast target with `Unix Makefiles`.
+From the host, build without entering the Dev Container:
+
+```bash
+make in-container TARGET=dreamcast-build
+```
+
+The dispatcher uses `build-container/` by default to keep its CMake cache separate from builds configured inside the Dev Container. To select a different directory:
+
+```bash
+make in-container TARGET=dreamcast-build DC_BUILD_DIR=build-host-kos
+```
+
+Inside the Dev Container, source the KOS environment if it is not already available in your shell, then build directly:
 
 ```bash
 source /opt/toolchains/dc/kos/environ.sh
-make dreamcast-configure
 make dreamcast-build
 ```
 
-Equivalent raw CMake commands:
+The Dreamcast CMake workflow uses `Unix Makefiles`; do not select Ninja for Dreamcast builds. A fresh `dreamcast-build` also generates and publishes the CDI. If you need to re-enable CDI generation in an existing CMake cache, first configure the build directory, then build the CDI target:
 
 ```bash
-source /opt/toolchains/dc/kos/environ.sh
-cmake -S . -B build-dreamcast -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=toolchains/dreamcast.cmake
-cmake --build build-dreamcast --verbose
+make in-container TARGET=dreamcast-configure
+make in-container TARGET=dreamcast-cdi
 ```
 
-Do not use the Ninja generator for Dreamcast builds. This template treats `Unix Makefiles` as the supported Dreamcast path because Ninja is a known problematic configuration there.
+For the raw CMake commands, custom container images, and more detail, see the [host-side container build guide](docs/container-build.md).
 
-#### Run in Flycast with logging
+### Run in Flycast
 
-From a host terminal at the repository root (with Docker, a graphical session, and Flycast installed on the host), build with the configured KOS image and launch Flycast on the host. If Flycast is missing, follow the [host installation steps](docs/flycast.md#install-flycast-on-the-host) first:
+From a host terminal with Docker, a graphical session, and Flycast installed, build and launch the example with logging:
 
 ```bash
 make flycast
 ```
 
-The target runs the KOS build in a temporary container, then launches the native `flycast` binary or installed `org.flycast.Flycast` Flatpak on the host. It retains combined output in `.artifacts/flycast/`. Flycast boot messages do not prove that guest KOS logs were captured.
+If Flycast is missing, follow the [host installation steps](docs/flycast.md#install-flycast-on-the-host). `make flycast` builds in the KOS image and launches Flycast on the host. To launch an already-built CDI without rebuilding, use `make flycast-logs`. The [Flycast guide](docs/flycast.md) explains installation, log locations, and the difference between emulator output and guest KOS logs.
 
-If you are already working inside the Dev Container, use `make dreamcast-configure` and `make dreamcast-cdi` there, then run `make flycast-logs` from a host terminal opened at the same shared workspace. See the [Flycast logging guide](docs/flycast.md) for details and limitations. Running on real hardware uses the separate `run-dc` target below.
+### Run on Dreamcast hardware
 
-#### Run on hardware
-
-After a Dreamcast build completes, you can send the ELF over the network:
+Build the ELF first, then send it to a Dreamcast running `dcload-ip` over a Broadband Adapter. The example uses the Dev Container build directory; replace the IP with the console's address. If you built from the host, use `DC_BUILD_DIR=build-container` instead. `dc-tool-ip` must be available on the host.
 
 ```bash
 make run-dc DC_BUILD_DIR=build-dreamcast DC_IP=192.168.0.84
 ```
 
-For the GDB-enabled path:
+For DHCP setup, see [Debugging the Dreamcast network connection](docs/network-debugging.md). The GDB-enabled target is `make run-dc-gdb`; it requires a Debug build and a running GDB server in the application.
+
+## Development / Testing
+
+Run the C++ host tests with `make host-test` after configuring and building the host target. The Flycast and container-dispatcher scripts also have mock-based tests that do not start Docker or Flycast:
 
 ```bash
-make run-dc-gdb DC_BUILD_DIR=build-dreamcast DC_IP=192.168.0.84
+make test-flycast-launcher test-build-flycast test-in-container
 ```
 
-For DHCP setup and troubleshooting when the Dreamcast does not receive an IP address, see [Debugging the Dreamcast network connection](docs/network-debugging.md).
-
-## Project Structure
-
-```plaintext
-dc-template/
-├── .devcontainer/         # Devcontainer configuration
-├── .github/workflows/     # GitHub Actions workflow
-├── .vscode/               # VS Code settings and CMake kits
-├── build-host/            # Recommended Linux host build directory (generated)
-├── build-dreamcast/       # Recommended Dreamcast build directory (generated)
-├── cmake/                 # CMake modules
-├── src/                   # Source code
-│   └── my_module/         # Example module
-│       ├── main.cpp       # Example application
-│       └── romdisk/       # ROMDISK assets
-├── toolchains/            # Dreamcast toolchain file
-├── out/                   # Output directory for CDI images
-├── LICENSE                # License file
-├── Makefile               # Makefile for additional targets (lint, run dc-tool-ip)
-└── README.md              # Project documentation
-```
-
-## Example Code
-The included example (`src/my_module/main.cpp`) demonstrates:
-
-- Initializing a 3D rendering window with raylib.
-- Handling Dreamcast controller input.
-- Rendering a rotating 3D cube.
-
-## GitHub Actions
-This template includes a GitHub Actions workflow (.github/workflows/github-actions.yml) to automate builds. The workflow:
-
-    1. Runs in a containerized Dreamcast development environment.
-    2. Builds the Dreamcast target using the provided toolchain and the `Unix Makefiles` generator.
-    3. Runs on both pushes and pull requests.
-    4. Outputs the build artifacts.
-
-## License
-This template is licensed under the [MIT License](https://opensource.org/licenses/MIT).
+GitHub Actions runs these script tests on an Ubuntu host runner and builds the Dreamcast target in a KOS container on pushes and pull requests. The workflow does not upload build artifacts. Emulator and hardware checks remain separate from CI.
 
 ## Contributing
-Contributions are welcome! Feel free to open issues or submit pull requests to improve this template.
 
-## Resources
-- [KallistiOS Documentation](https://www.kallistios.org/)
-- [Dreamcast Development Wiki](https://www.dreamcast.wiki/)
-- [raylib Documentation](https://www.raylib.com/)
-- [GitHub Actions Documentation](https://docs.github.com/en/actions)
-- [CMake Documentation](https://cmake.org/documentation/)
+Contributions are welcome. Open an issue or submit a pull request to improve the template.
+
+## License
+
+This template is licensed under the MIT License; see [`LICENSE`](LICENSE). Third-party dependencies and tools retain their own licenses.

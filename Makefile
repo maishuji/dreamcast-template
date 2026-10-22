@@ -3,13 +3,14 @@ HOST_CMAKE_GENERATOR ?= Ninja
 DC_IP ?= 192.168.0.84 # Please set the IP address of your dreamcast here ( or through env var DC_IP )
 DC_BUILD_DIR ?= build-dreamcast
 FLYCAST_BUILD_DIR ?= build-flycast
+CONTAINER_DC_BUILD_DIR ?= build-container
 DC_CMAKE_GENERATOR ?= Unix Makefiles
 DC_TARGET ?= my_module
 DC_CDI ?= out/$(DC_TARGET).cdi
 CONTAINER_RUNTIME ?= docker
 KOS_IMAGE ?= maishuji/dc-kos-image:15.2.1-dev-08feb26-gdb-kp08feb26
 
-.PHONY: all host-configure host-build host-test dreamcast-configure dreamcast-build dreamcast-cdi flycast flycast-logs test-flycast-launcher test-build-flycast run-dc run-dc-gdb lint clean build-cmake-verbose
+.PHONY: all host-configure host-build host-test dreamcast-configure dreamcast-build dreamcast-cdi in-container flycast flycast-logs test-flycast-launcher test-build-flycast test-in-container run-dc run-dc-gdb lint clean build-cmake-verbose
 
 host-configure:
 	cmake -S . -B $(HOST_BUILD_DIR) -G "$(HOST_CMAKE_GENERATOR)"
@@ -23,8 +24,13 @@ host-test:
 dreamcast-configure:
 	cmake -S . -B $(DC_BUILD_DIR) -DCMAKE_BUILD_TYPE=Release -G "$(DC_CMAKE_GENERATOR)" -DCMAKE_TOOLCHAIN_FILE=toolchains/dreamcast.cmake
 
-dreamcast-build:
+dreamcast-build: dreamcast-configure
 	cmake --build $(DC_BUILD_DIR) --verbose
+
+# Run Dreamcast Make targets through the configured KOS container from the host.
+in-container: DC_BUILD_DIR = $(CONTAINER_DC_BUILD_DIR)
+in-container:
+	CONTAINER_RUNTIME="$(CONTAINER_RUNTIME)" KOS_IMAGE="$(KOS_IMAGE)" bash tools/in-container.sh "$(TARGET)" DC_BUILD_DIR="$(DC_BUILD_DIR)" $(MAKEOVERRIDES)
 
 # Re-enable CDI generation even when an existing cache has it disabled.
 dreamcast-cdi:
@@ -45,6 +51,9 @@ test-flycast-launcher:
 
 test-build-flycast:
 	bash tests/test_build_flycast.sh
+
+test-in-container:
+	bash tests/test_in_container.sh
 
 # This target is for running the program on dreamcast, given that you are using BBA or a LAN adapter
 run-dc:
