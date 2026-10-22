@@ -31,7 +31,8 @@ dreamcast-cdi:
 	cmake -S . -B "$(DC_BUILD_DIR)" -DENABLE_CDI_IMAGE=ON
 	cmake --build "$(DC_BUILD_DIR)" --target $(DC_TARGET)_cdi --verbose
 
-# Build with the KOS image and launch Flycast on the host.
+# Build with the KOS image and launch its own CDI, not another build tree's out/ image.
+flycast: DC_CDI = $(FLYCAST_BUILD_DIR)/src/$(DC_TARGET)/$(DC_TARGET).cdi
 flycast:
 	CONTAINER_RUNTIME="$(CONTAINER_RUNTIME)" KOS_IMAGE="$(KOS_IMAGE)" DC_BUILD_DIR="$(FLYCAST_BUILD_DIR)" DC_CDI="$(DC_CDI)" FLYCAST_BIN="$(FLYCAST_BIN)" FLYCAST_LOG_DIR="$(FLYCAST_LOG_DIR)" FLYCAST_REQUIRED_MARKER="$(FLYCAST_REQUIRED_MARKER)" bash tools/build-flycast.sh
 

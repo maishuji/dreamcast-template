@@ -13,22 +13,28 @@ function(add_generate_cdi_image_for_target target_name)
         set(ELF_FILE "${CMAKE_CURRENT_BINARY_DIR}/${target_name}.elf")
         set(OUTPUT_DIR "${PROJECT_SOURCE_DIR}/out")
         set(CDI_FILE "${OUTPUT_DIR}/${target_name}.cdi")
+        set(BUILD_CDI_FILE "${CMAKE_CURRENT_BINARY_DIR}/${target_name}.cdi")
 
 
         # Ensure the output directory exists
-        file(MAKE_DIRECTORY ${OUTPUT_DIR})
+        file(MAKE_DIRECTORY "${OUTPUT_DIR}")
 
-        message(STATUS "Generating CDI: ${CDI_FILE}")
+        message(STATUS "Generating CDI: ${BUILD_CDI_FILE}")
         add_custom_command(
-            OUTPUT ${CDI_FILE}
-            COMMAND ${MKDCDISC} -e ${ELF_FILE} -o ${CDI_FILE} -n ${target_name} -v 3
+            OUTPUT "${BUILD_CDI_FILE}"
+            COMMAND "${MKDCDISC}" -e "${ELF_FILE}" -o "${BUILD_CDI_FILE}" -n "${target_name}" -v 3
             DEPENDS ${target_name}
             COMMENT "Making CDI image"
+            VERBATIM
         )
 
-        # Add a custom target to depend on the CDI image generation
+        # The shared out/ image is for manual launch; each build tree owns its
+        # incremental output so another build cannot make it appear up to date.
         add_custom_target(${target_name}_cdi ALL
-            DEPENDS ${CDI_FILE}
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${BUILD_CDI_FILE}" "${CDI_FILE}"
+            DEPENDS "${BUILD_CDI_FILE}"
+            COMMENT "Publishing CDI image to ${CDI_FILE}"
+            VERBATIM
         )
 
     else()
