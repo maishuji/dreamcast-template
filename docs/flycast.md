@@ -25,6 +25,8 @@ Both Make targets report a missing emulator before trying to launch it; `make fl
 
 ## One-command host workflow
 
+If you only need to build the Dreamcast target from the host and do not want to launch an emulator, use `make in-container TARGET=dreamcast-build`; see the [host-side container build guide](container-build.md) for prerequisites and output paths.
+
 From a host terminal at the repository root, run:
 
 ```sh
